@@ -7,32 +7,62 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ArticleListActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
+    ArticleListAdapter articleListAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_article_list);
 
+        articleListAdapter = new ArticleListAdapter();
+
         recyclerView = findViewById(R.id.recyclerView);
         //Step 1 - create an adapter
-        recyclerView.setAdapter(new ArticleListAdapter());
+        recyclerView.setAdapter(articleListAdapter);
         //Step 2 - set a layout manager
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        //Todo: Progress Indicator
+
+        final AuthenticationActivity auth = new AuthenticationActivity();
+        auth.showProgressDialog(true);
+        ApiManager.getApiInterface().getArticles()
+                .enqueue(new Callback<List<Article>>() {
+                    @Override
+                    public void onResponse(Call<List<Article>> call, Response<List<Article>> response) {
+                        auth.showProgressDialog(false);
+                        if(response.isSuccessful()){
+                            articleListAdapter.setData(response.body());
+                        }else {
+                            //show alert
+                            auth.ShowAlert("Failed","Try again later");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<Article>> call, Throwable t) {
+                        //show alert
+                        auth.showProgressDialog(false);
+                        auth.ShowAlert("Failed","Try again later");
+                    }
+                });
     }
 
     public class ArticleListAdapter extends RecyclerView.Adapter<ArticleItemViewHolder>{
 
-        String[] articleList = {
-                "article1",
-                "article2",
-                "article3",
-                "article4",
-                "article5"
-        };
+        List<Article> articleList = new ArrayList<>();
 
         @Override
         public ArticleItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -42,14 +72,26 @@ public class ArticleListActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(ArticleItemViewHolder holder, int position) {
+        public void onBindViewHolder(ArticleItemViewHolder holder, final int position) {
             //setting the data
-            holder.articleName.setText(articleList[position]);
+            holder.articleName.setText(articleList.get(position).getHeading());
+            holder.cardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(ArticleListActivity.this,"Article Clicked :"+articleList.get(position).getHeading(),Toast.LENGTH_SHORT)
+                            .show();
+                }
+            });
         }
 
         @Override
         public int getItemCount() {
-            return articleList.length;
+            return articleList.size();
+        }
+
+        public void setData(List<Article> data){
+            this.articleList = data;
+            this.notifyDataSetChanged();
         }
     }
 }

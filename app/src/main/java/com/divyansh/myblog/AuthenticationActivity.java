@@ -148,7 +148,7 @@ public class AuthenticationActivity extends AppCompatActivity {
 
     }
 
-    private void showProgressDialog(Boolean shouldShow){
+    protected void showProgressDialog(Boolean shouldShow){
         if(shouldShow){
             progressDialog.show();
         }else{
@@ -156,7 +156,7 @@ public class AuthenticationActivity extends AppCompatActivity {
         }
     }
 
-    private void ShowAlert(String title, String message){
+    protected void ShowAlert(String title, String message){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title);
         builder.setMessage(message);
